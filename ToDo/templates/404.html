@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	Todo Django - Page not found
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Page not found!</h1>
+		<a href="{% url 'list_note' %}" class="mt-4">Home</a>
+	</div>
+{% endblock content %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Profile
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>{{ user.username }}</h1>
+		<div class="mt-4 w-50">
+			{% if not user.first_name and not user.last_name and not user.email %}
+				<div class="mb-3">
+					<h4>
+						Your details are missing, please <a href="{% url 'edit_user' %}" class="link">fill them in</a>
+					</h4>
+				</div>
+			{% else %}
+				<div>
+					{% if user.first_name %}
+						<div class="mb-2">
+							<p class="fs-5 mb-0 text">
+								First name: <span class="fw-bold">{{ user.first_name }}</span>
+							</p>
+						</div>
+					{% endif %}
+					{% if user.last_name %}
+						<div class="mb-2">
+							<p class="fs-5 mb-0 text">
+								Last name: <span class="fw-bold">{{ user.last_name }}</span>
+							</p>
+						</div>
+					{% endif %}
+					{% if user.email %}
+						<div class="mb-2">
+							<p class="fs-5 mb-0 text">
+								Email: <span class="fw-bold">{{ user.email }}</span>
+							</p>
+						</div>
+					{% endif %}
+				</div>
+			{% endif %}
+			<div class="mt-4">
+				<a href="{% url 'logout_user' %}" class="btn btn-danger">Logout</a>
+				{% if user.first_name or user.last_name or user.email %}
+					<a href="{% url 'edit_user' %}" class="btn btn-primary">Edit</a>
+				{% endif %}
+				<a href="{% url 'delete_user' %}" class="btn btn-danger ms-3">Delete</a>
+			</div>
+		</div>
+	</div>
+{% endblock content %}

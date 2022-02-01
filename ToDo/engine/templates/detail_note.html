@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Note detail
+{% endblock title %}
+
+{% block content %}
+	<div class="card w-50">
+		<div class="card-header">
+			Note
+		</div>
+		<div class="card-body">
+			{% if note.title %}
+				<h5 class="card-title">{{ note.title }}</h5>
+			{% endif %}
+			<p class="card-text mb-2">
+				{{ note.text }}
+			</p>
+			{% if note.category %}
+				<h6 class="card-subtitle mb-2 text-muted">
+					<a href="{% url 'detail_category' note.category.slug %}">{{ note.category.title }}</a>
+				</h6>
+			{% endif %}
+			{% if note.completion_date %}
+				<p class="card-text">
+					Date of completion: <span class="fw-bold">{{ note.completion_date|date:"j (l) M. Y" }}</span>
+				</p>
+			{% endif %}
+			<div class="d-flex mt-3">
+				<a href="{% url 'delete_note' note.id %}" class="btn btn-danger me-3">Delete</a>
+				<a href="{% url 'edit_note' note.id %}" class="btn btn-primary">Edit</a>
+			</div>
+		</div>
+		<div class="card-footer text-muted">
+			{{ note.pub_date }}
+		</div>
+	</div>
+{% endblock content %}

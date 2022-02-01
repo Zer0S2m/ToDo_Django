@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Delete note
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Delete note</h1>
+		<div class="mt-4">
+			<form method="post" action="">
+				{% csrf_token %}
+				<p>Are you sure you want to delete: <span class="fw-bolder">{{ note.title }}</span> ?</p>
+				<button type="submit" class="btn btn-danger">Delete</button>
+			</form>
+		</div>
+	</div>
+{% endblock content %}

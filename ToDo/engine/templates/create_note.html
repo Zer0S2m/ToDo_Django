@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Create note
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Create note</h1>
+		<div class="mt3 w-50">
+			<form method="post">
+				{% csrf_token %}
+				<div class="form-error">
+					{{ form.non_field_errors }}
+				</div>
+				{% for f in form %}
+					<div class="mb-3">
+						<label for="{{ f.for_id_label }}" class="form-label">{{ f.label }}</label>
+						{{ f }}
+						{% if f.help_text %}
+							<p class="form-text">
+								{{ f.help_text }}
+							</p>
+						{% endif %}
+					</div>
+					<div class="form-error mb-3">
+						{{ f.errors }}
+					</div>
+				{% endfor %}
+				{% if categories %}
+					<div class="mb-3">
+						<label for="exampleFormControlSelect1" class="form-label">Category</label>
+						<select class="form-select" id="exampleFormControlSelect1" name="category">
+							<option value="0" selected>Select category</option>
+							{% for category in categories %}
+								<option value="{{ category.id }}">{{ category.title }}</option>
+							{% endfor %}
+						</select>
+						<div class="form-text">
+							Category is not required.
+						</div>
+					</div>
+				{% endif %}
+				<button type="submit" class="btn btn-primary">Create</button>
+			</form>
+		</div>
+	</div>
+{% endblock content %}

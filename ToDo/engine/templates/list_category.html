@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load count_notes %}
+
+{% block title %}
+	ToDo Django - List categories
+{% endblock title %}
+
+{% block content %}	
+	<div class="w-25">
+		<h1>Categories</h1>
+		{% if categories %}
+			<ol class="list-group list-group-numbered mt-4">
+				{% for category in categories %}
+					<li class="list-group-item d-flex justify-content-between align-items-start">
+						<div class="ms-2 me-auto">
+							<div class="fw-bold">
+								<a href="{% url 'detail_category' category.slug %}">{{ category.title }}</a>
+							</div>
+						</div>
+						<span class="badge bg-primary rounded-pill">{{ count_notes|get_count_notes:category.slug }}</span>
+					</li>
+				{% endfor %}
+			</ol>
+		{% else %}
+			<h3>No categories</h3>
+		{% endif %}
+	</div>
+{% endblock content %}

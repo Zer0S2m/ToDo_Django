@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Edit note
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Edit note</h1>
+		<div class="mt-3 w-50">
+			<form method="post">
+				{% csrf_token %}
+				<div class="mb-3">
+					<label for="exampleInputTitle1" class="form-label">Title</label>
+					{% if form.title.value %}
+						<input type="text" value="{{ form.title.value }}" class="form-control" id="exampleInputTitle1" name="title">
+					{% else %}
+						<input type="text" class="form-control" name="title">
+					{% endif %}
+					<p class="form-text">
+						Title is not required.
+					</p>
+				</div>
+				<div class="mb-3">
+					<label for="exampleFormControlTextarea1" class="form-label">Text</label>
+					<textarea class="form-control" value="{{ form.text.value }}" id="exampleFormControlTextarea1" rows="3" name="text" required>{{ form.text.value }}</textarea>
+				</div>
+				<div class="mb-3">
+					<label for="completion_date" class="form-label">Date of completion</label>
+					{% if due_date %}
+						<input type="date" name="completion_date" id="completion_date" class="form-control" value="{{ due_date }}">
+					{% else %}
+						<input type="date" name="completion_date" id="completion_date" class="form-control">
+					{% endif %}
+					<p class="form-text">
+						Date of completion is not required.
+					</p>
+					<div class="form-error mb-3">
+						{{ form.completion_date.errors }}
+					</div>
+				</div>
+				{% if categories %}
+					<div class="mb-3">
+						<label for="exampleFormControlSelect1" class="form-label">Category</label>
+						<select class="form-select" id="exampleFormControlSelect1"  name="category">
+							{% if object.category.id == False %}
+								<option value="0" selected>Select category</option>
+							{% else %}
+								<option value="0">Select category</option>
+							{% endif %}
+							{% for category in categories %}
+								{% if object.category.id == category.id %}
+									<option value="{{ category.id }}" selected>{{ category.title }}</option>
+								{% else %}
+									<option value="{{ category.id }}">{{ category.title }}</option>
+								{% endif %}
+							{% endfor %}
+						</select>
+						<p class="form-text">
+							Category is not required.
+						</p>
+					</div>
+				{% endif %}
+				<button type="submit" class="btn btn-primary">Edit</button>
+			</form>
+		</div>
+	</div>
+{% endblock content %}

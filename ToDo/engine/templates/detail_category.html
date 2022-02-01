@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Category detail
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Category - {{ category.title }}</h1>
+		{% if notes %}
+		<div class="row align-items-start mt-4">
+			{% for note in notes %}
+				<div class="col-6 col-sm-4 mb-3">
+					<div class="card w-100" style="width: 18rem;">
+						<div class="card-body">
+							<h5 class="card-title">{{ note.title }}</h5>
+							{% if note.category %}
+								<h6 class="card-subtitle mb-2 mt-2 text-muted">
+									<a href="{% url 'detail_category' note.category.slug %}">{{ note.category.title }}</a>
+								</h6>
+							{% endif %}
+							<p class="card-text">
+								{{ note.text }}
+							</p>
+							<p class="card-text">
+								<small class="text-muted">{{ note.pub_date }}</small>
+							</p>
+							<a href="{% url 'detail_note' note.id %}" class="btn btn-primary">More</a>
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+		{% else %}
+			<h3>No notes</h3>
+		{% endif %}
+	</div>
+{% endblock content %}
