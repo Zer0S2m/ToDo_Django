@@ -1,0 +1,45 @@
+<div class="filter">
+	<form action="{% url 'list_note' %}" method="get">
+		<div class="d-flex">
+			{% if categories %}
+				<div class="me-5">
+					<h4 class="mb-2">Category</h4>
+					{% for category in categories %}
+						<div class="form-check mb-2">
+							<input class="form-check-input" type="checkbox" value="{{ category.slug }}" name="category" id="category_{{ category.id }}">
+							<label class="form-check-label" for="category_{{ category.id }}">
+								{{ category.title }}
+							</label>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+			<div class="me-5">
+				<h4>Note creation date</h4>
+				<div class="d-flex">
+					<div class="me-3">
+						<label for="date_1" class="form-label">First date period:</label>
+						<input name="date_first" type="date" class="form-control" id="date_1">
+					</div>
+					<div>
+						<label for="date_2" class="form-label">Second date period:</label>
+						<input name="date_second" type="date" class="form-control" id="date_2">
+					</div>
+				</div>
+			</div>
+			<div class="me-5">
+				<h4>Title</h4>
+				<label for="title_note" class="form-label">Note title</label>
+				<input id="title_note" type="text" name="title" class="form-control">
+			</div>
+			<div class="me-5">
+				<h4>Text</h4>
+				<label for="text_note" class="form-label">Note description</label>
+				<input id="text_note" type="text" name="text" class="form-control">
+			</div>
+			<div class="h-100 my-auto">
+				<button type="submit" class="btn btn-outline-success">Search</button>
+			</div>
+		</div>
+	</form>
+</div>

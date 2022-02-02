@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.shortcuts import render
 from django.shortcuts import redirect
 
@@ -24,6 +26,13 @@ from .forms import (
 from .mixins import MixinNote
 
 
+def set_date(date: str) -> datetime:
+	set_date_split = list(map(int, date.split("-")))
+	set_date = datetime(*set_date_split)
+
+	return set_date
+
+
 def	create_slug_category(title: str, id_user: int) -> str:
 	title_split = list(map(lambda char: char.lower(), title.split(" ")))
 	slug = "-".join(title_split) + f"_{id_user}"
@@ -31,7 +40,7 @@ def	create_slug_category(title: str, id_user: int) -> str:
 	return slug
 
 
-class NoteListView(ListView):
+class NoteListView(ListView, MixinNote):
 	model = Note
 	template_name = "index.html"
 	context_object_name = "notes"
@@ -43,31 +52,60 @@ class NoteListView(ListView):
 		if self.request.user.is_authenticated:
 			context["notes"] = Note.objects.filter(
 				user = self.request.user
-			).all()
+			).order_by("-pub_date")
+			context["categories"] = self.get_categories_user()
+
+			if len(self.request.GET.get("text_search", "")):
+				context = self.found_notes_search_input(context)
+
+			if len(self.request.GET) > 1:
+				context = self.found_notes_filter(context)
 
 		return context
 
-	def get(self, request, *args, **kwargs):
-		text_search = request.GET.get("text_search", "")
+	def found_notes_search_input(self, context):
+		text_search = self.request.GET.get("text_search", "")
 
-		if text_search:
-			context = {}
-			context = self.found_notes_search_input(text_search, context)
-
-			return self.render_to_response(context)
-
-		return super().get(self, request, *args, **kwargs)
-
-	def found_notes_search_input(self, text_search, context):
 		found_notes = self.model.objects.filter(
 			Q(title__icontains = text_search) | Q(text__icontains = text_search),
 			user = self.request.user
-		)
+		).order_by("-pub_date")
 
 		self.object_list = found_notes
 		context["notes"] = found_notes
 		context["is_search"] = True
 
+		return context
+
+	def found_notes_filter(self, context):
+		found_notes = self.model.objects.filter(
+			title__icontains = self.request.GET.get("title", ""),
+			text__icontains = self.request.GET.get("text", ""),
+			user = self.request.user,
+		).order_by("-pub_date")
+
+		if self.request.GET.get("date_first", "") and self.request.GET.get("date_second", ""):
+			date_first = set_date(date = self.request.GET.get("date_first", ""))
+			date_second = set_date(date = self.request.GET.get("date_second", ""))
+			min_max_date = sorted([date_first, date_second])
+
+			found_notes = found_notes.filter(
+				pub_date__range = (min_max_date[0], min_max_date[1])
+			)
+
+		categories = self.request.GET.getlist("category")
+		if categories:
+			found_notes_category = []
+			for category in categories:
+				found_notes_category.extend(found_notes.filter(
+					category__slug__in = [category]
+				))
+
+			found_notes = found_notes_category
+
+		self.object_list = found_notes
+		context["notes"] = found_notes
+		context["is_search"] = True
 		return context
 
 
@@ -145,7 +183,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 			form.cleaned_data["category"] = Category.objects.filter(
 				pk = int(category_id),
 				user = self.request.user
-			).first()
+			)
 
 		return form
 
@@ -156,14 +194,14 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 
 		self.object.user = form.cleaned_data["user"]
 		if "category" in form.cleaned_data:
-			self.object.category = form.cleaned_data["category"]
+			self.object.category = form.cleaned_data["category"].first()
 
 		self.object.save()
 
 		return redirect(self.object)
 
 
-class CategoryListView(ListView):
+class CategoryListView(ListView, MixinNote):
 	model = Category
 	template_name = "list_category.html"
 
@@ -175,9 +213,7 @@ class CategoryListView(ListView):
 			context["count_notes"][category.slug] = len(Note.objects.filter(category = category))
 
 		if self.request.user.is_authenticated:
-			context["categories"] = Category.objects.filter(
-				user = self.request.user
-			).all()
+			context["categories"] = self.get_categories_user()
 
 		return context
 
@@ -202,7 +238,7 @@ class CategoryDetailView(DetailView):
 		if self.request.user.is_authenticated and self.model.objects.filter(
 			slug = context["object"].slug,
 			user = self.request.user
-		).first():
+		):
 			return self.render_to_response(context)
 		else:
 			return render(self.request, "404.html", status = 404)

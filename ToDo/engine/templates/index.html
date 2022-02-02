@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
 	ToDo Django
@@ -9,10 +10,15 @@
 		<div class="d-flex justify-content-between">
 			<h1 class="fs-2 text">ToDo Django</h1>
 			{% if user.is_authenticated %}
-				<form class="d-flex" method="get" action="{% url 'list_note' %}">
-					<input class="form-control me-2" type="search" placeholder="Text and title search" aria-label="Search" name="text_search">
-					<button class="btn btn-outline-success" type="submit">Search</button>
-				</form>
+				<div class="d-flex">
+					<button type="button" class="btn d-flex justify-content-center align-items-center me-2 btn-open-filter">
+						<img src="{% static './img/filter.svg' %}" alt="">
+					</button>
+					<form class="d-flex" method="get" action="{% url 'list_note' %}">
+						<input class="form-control me-2" type="search" placeholder="Text and title search" aria-label="Search" name="text_search">
+						<button class="btn btn-outline-success" type="submit">Search</button>
+					</form>
+				</div>
 			{% endif %}
 		</div>
 		{% if not notes and is_search %}
@@ -20,6 +26,9 @@
 				<h4>No notes found</h4>
 				<a href="{% url 'list_note' %}" class="link">Home</a>
 			</div>
+		{% endif %}
+		{% if user.is_authenticated %}
+			{% include './includes/filter.html' %}
 		{% endif %}
 		<div class="row align-items-start mt-4">
 			{% for note in notes %}
