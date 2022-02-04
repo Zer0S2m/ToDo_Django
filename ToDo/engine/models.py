@@ -11,7 +11,7 @@ class Note(models.Model):
 	text = models.TextField(max_length = 1000, verbose_name = "Описание")
 	pub_date = models.DateField(auto_now = True, verbose_name = "Дата публикации")
 	category = models.ForeignKey(
-		"Category", on_delete = models.CASCADE, verbose_name = "Категория", blank = True, null = True
+		"Category", on_delete = models.SET_NULL, verbose_name = "Категория", blank = True, null = True
 	)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
 	completion_date = models.DateTimeField(blank = True, null = True, verbose_name = "Дата завершения")

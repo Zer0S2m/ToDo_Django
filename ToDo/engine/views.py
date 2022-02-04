@@ -274,3 +274,9 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
 		self.object.save()
 
 		return redirect("list_category")
+
+
+class CategoryDeleteView(DeleteView):
+	model = Category
+	template_name = "delete_category.html"
+	success_url = reverse_lazy("list_category")
