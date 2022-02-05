@@ -24,6 +24,7 @@ from .forms import (
 )
 
 from .mixins import MixinNote
+from .mixins import MixinCategory
 
 
 def set_date(date: str) -> datetime:
@@ -109,28 +110,28 @@ class NoteListView(ListView, MixinNote):
 		return context
 
 
-class NoteDetailView(DetailView):
+class NoteDetailView(LoginRequiredMixin, DetailView, MixinNote):
 	model = Note
 	template_name = "detail_note.html"
 	context_object_name = "note"
 
 	def get(self, request, *args, **kwargs):
-		self.object = self.get_object()
-		context = self.get_context_data(object = self.object)
+		if not self.check_is_note_user():
+			return render(self.request, "404.html", status = 404)
 
-		if self.request.user.is_authenticated and self.model.objects.filter(
-			id = context["object"].id,
-			user = request.user
-		).first():
-			return self.render_to_response(context)
-		else:
-			return render(request, "404.html", status = 404)
+		return super().get(request, *args, **kwargs)
 
 
-class NoteDeleteView(DeleteView):
+class NoteDeleteView(LoginRequiredMixin, DeleteView, MixinNote):
 	model = Note
 	template_name = "delete_note.html"
 	success_url = reverse_lazy("list_note")
+
+	def get(self, request, *args, **kwargs):
+		if not self.check_is_note_user():
+			return render(self.request, "404.html", status = 404)
+
+		return super().get(request, *args, **kwargs)
 
 
 class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
@@ -162,6 +163,12 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 			context["due_date"] = self.object.completion_date.strftime("%Y-%m-%d")
 
 		return context
+
+	def get(self, request, *args, **kwargs):
+		if not self.check_is_note_user():
+			return render(self.request, "404.html", status = 404)
+
+		return super().get(request, *args, **kwargs)
 
 
 class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
@@ -218,7 +225,7 @@ class CategoryListView(ListView, MixinNote):
 		return context
 
 
-class CategoryDetailView(DetailView):
+class CategoryDetailView(LoginRequiredMixin, DetailView, MixinCategory):
 	model = Category
 	template_name = "detail_category.html"
 	context_object_name = "category"
@@ -232,16 +239,10 @@ class CategoryDetailView(DetailView):
 		return context
 
 	def get(self, request, *args, **kwargs):
-		self.object = self.get_object()
-		context = self.get_context_data(object = self.object)
-
-		if self.request.user.is_authenticated and self.model.objects.filter(
-			slug = context["object"].slug,
-			user = self.request.user
-		):
-			return self.render_to_response(context)
-		else:
+		if not self.check_is_category_user():
 			return render(self.request, "404.html", status = 404)
+
+		return super().get(request, *args, **kwargs)
 
 
 class CategoryCreateView(LoginRequiredMixin, CreateView):
@@ -276,7 +277,13 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
 		return redirect("list_category")
 
 
-class CategoryDeleteView(DeleteView):
+class CategoryDeleteView(LoginRequiredMixin, DeleteView, MixinCategory):
 	model = Category
 	template_name = "delete_category.html"
 	success_url = reverse_lazy("list_category")
+
+	def get(self, request, *args, **kwargs):
+		if not self.check_is_category_user():
+			return render(self.request, "404.html", status = 404)
+
+		return super().get(request, *args, **kwargs)
