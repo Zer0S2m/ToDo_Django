@@ -263,10 +263,11 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
 		form = self.set_cleaned_data_form(form)
 
 		if Category.objects.filter(
-				slug = form.cleaned_data["slug"]
-			).first():
-				form.errors["title"] = "This category already exists!"
-				return render(self.request, "create_category.html", {"form": form})
+			slug = form.cleaned_data["slug"],
+			user = self.request.user
+		).first():
+			form.errors["title"] = "This category already exists!"
+			return render(self.request, "create_category.html", {"form": form})
 
 		self.object = form.save(commit = False)
 		self.object.user = form.cleaned_data["user"]
@@ -275,6 +276,43 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
 		self.object.save()
 
 		return redirect("list_category")
+
+
+class CategoryUpdateView(LoginRequiredMixin, UpdateView, MixinCategory):
+	model = Category
+	template_name = "edit_category.html"
+	form_class = CategoryForm
+
+	def get(self, request, *args, **kwargs):
+		if not self.check_is_category_user():
+			return render(self.request, "404.html", status = 404)
+
+		return super().get(request, *args, **kwargs)
+
+	def get_success_url(self):
+		return self.object.get_absolute_url()
+
+	def form_valid(self, form):
+		slug = create_slug_category(
+            title = form.cleaned_data["title"],
+            id_user = self.request.user.id
+		)
+
+		if self.kwargs.get(self.slug_url_kwarg) == slug:
+			return HttpResponseRedirect(self.get_success_url())
+
+		if self.model.objects.filter(
+            slug = slug,
+			user = self.request.user
+        ).first():
+			form.errors["title"] = "This category already exists!"
+			return render(self.request, "edit_category.html", {"form": form})
+
+		self.object = form.save(commit = False)
+		self.object.slug = slug
+		self.object.save()
+
+		return HttpResponseRedirect(self.get_success_url())
 
 
 class CategoryDeleteView(LoginRequiredMixin, DeleteView, MixinCategory):

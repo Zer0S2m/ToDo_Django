@@ -29,5 +29,8 @@ class Category(models.Model):
 	slug = models.SlugField(max_length = 64, unique = True)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE)
 
+	def get_absolute_url(self):
+		return reverse('detail_category', kwargs = {'slug': self.slug})
+
 	def __str__(self):
 	   return f"{self.title}"

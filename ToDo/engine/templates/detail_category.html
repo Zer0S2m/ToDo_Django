@@ -34,8 +34,9 @@
 		{% else %}
 			<h3>No notes</h3>
 		{% endif %}
-		<div class="mt-4">
-			<a href="{% url 'delete_category' category.slug %}" class="btn btn-danger">Delete</a>
+		<div class="d-flex mt-4">
+			<a href="{% url 'delete_category' category.slug %}" class="btn btn-danger me-3">Delete</a>
+			<a href="{% url 'edit_category' category.slug %}" class="btn btn-primary">Edit</a>
 		</div>
 	</div>
 {% endblock content %}

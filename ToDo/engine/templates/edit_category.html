@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	ToDo Django - Edit category
+{% endblock title %}
+
+{% block content %}
+	<div>
+		<h1>Edit category</h1>
+		<div class="w-50 mt-3">
+			<form method="post">
+				{% csrf_token %}
+				<div class="mb-3">
+					<label for="exampleInputTitle1" class="form-label">Title</label>
+					{% if form.title.value %}
+						<input type="text" value="{{ form.title.value }}" class="form-control" id="exampleInputTitle1" name="title">
+					{% else %}
+						<input type="text" class="form-control" name="title">
+					{% endif %}
+					<div class="form-error mb-3 mt-2">
+						{{ form.title.errors }}
+					</div>
+				</div>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</form>
+		</div>
+	</div>
+{% endblock content %}
