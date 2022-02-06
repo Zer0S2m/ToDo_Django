@@ -1,3 +1,4 @@
+from django import template
 from django.shortcuts import redirect
 from django.shortcuts import render
 
@@ -28,10 +29,11 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import (
 	RegisterForm, LoginUserForm, UserForm,
-	PasswordConfirmForm
+	PasswordConfirmForm, ChangePassword
 )
 
 from .tokens import account_activation_token
@@ -39,13 +41,10 @@ from .tokens import account_activation_token
 from .mixins import ProfileMixin
 
 
-class UserDetailView(TemplateResponseMixin, ContextMixin, View):
+class UserDetailView(LoginRequiredMixin, TemplateResponseMixin, ContextMixin, View):
 	template_name = "profile.html"
 
 	def get(self, request, *args, **kwargs):
-		if not self.request.user.is_authenticated:
-			return render(request, "404.html", status = 404)
-
 		context = self.get_context_data(**kwargs)
 		return self.render_to_response(context)
 
@@ -93,7 +92,7 @@ class LoginUser(LoginView):
 		return super(LoginUser, self).form_valid(form)
 
 
-class UserUpdateView(UpdateView):
+class UserUpdateView(LoginRequiredMixin, UpdateView):
 	model = User
 	form_class = UserForm
 	template_name = "edit.html"
@@ -161,7 +160,7 @@ class UserDeleteView(ProfileMixin, TemplateView, DeletionMixin):
 		return super().get(request, *args, **kwargs)
 
 
-class PasswordConfirmView(ProfileMixin, FormView):
+class PasswordConfirmView(LoginRequiredMixin, ProfileMixin, FormView):
 	model = User
 	template_name = "password_confirm.html"
 	form_class = PasswordConfirmForm
@@ -189,6 +188,43 @@ class PasswordConfirmView(ProfileMixin, FormView):
 		self.request.session["is_deleted_user"] = True
 
 
+class PasswordChange(LoginRequiredMixin, ProfileMixin, FormView):
+	model = User
+	template_name = "change_password.html"
+	form_class = ChangePassword
+	success_url = reverse_lazy("change_password_done_user")
+
+	def get(self, request, *args, **kwargs):
+		try:
+			uid = force_text(urlsafe_base64_decode(self.kwargs.get("uidb64", "")))
+			user = self.model.objects.get(pk = uid)
+		except (
+			TypeError,
+			ValueError,
+			OverflowError,
+			User.DoesNotExist
+		):
+			user = None
+
+		if user is not None and account_activation_token.check_token(user, self.kwargs.get("token", "")):
+			return super().get(request, *args, **kwargs)
+		else:
+			return render(request, 'change_password_invalid.html')
+
+	def post(self, request, *args, **kwargs):
+		self.object = self.get_object()
+		return super().post(request, *args, **kwargs)
+
+	def form_valid(self, form):
+		uid = force_text(urlsafe_base64_decode(self.kwargs.get("uidb64", "")))
+		user = self.model.objects.get(pk = uid)
+
+		user.set_password(form.cleaned_data['password2'])
+		user.save()
+
+		return super().form_valid(form)
+
+
 def	logout_user(request):
 	logout(request)
 	return redirect("login_user")
@@ -198,7 +234,32 @@ def activation_sent(request):
 	return render(request, "activate_sent.html")
 
 
-def activate(request, uidb64, token):
+def reset_password(request):
+	user = request.user
+	current_site = get_current_site(request)
+	subject = 'Reset password account'
+
+	message = render_to_string('reset_password_email.html', {
+		'user': user,
+		'domain': current_site.domain,
+		'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+		'token': account_activation_token.make_token(user),
+	})
+
+	user.email_user(subject, message)
+
+	return redirect("reset_password_done_user")
+
+
+def reset_password_done(request):
+	return render(request, "reset_password.html")
+
+
+def password_change_done(request):
+	return render(request, "change_password_done.html")
+
+
+def activate_user(request, uidb64, token):
 	try:
 		uid = force_text(urlsafe_base64_decode(uidb64))
 		user = User.objects.get(pk = uid)
