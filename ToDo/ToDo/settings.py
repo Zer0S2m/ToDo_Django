@@ -134,3 +134,5 @@ STATICFILES_DIRS = [
 
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 15
 SESSION_ENGINE = "django.contrib.sessions.backends.file"
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

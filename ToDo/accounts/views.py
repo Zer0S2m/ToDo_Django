@@ -1,6 +1,12 @@
 from django.shortcuts import redirect
 from django.shortcuts import render
 
+from django.utils.encoding import force_text
+from django.utils.encoding import force_bytes
+
+from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
+
 from django.views.generic import (
 	CreateView, View, TemplateView
 )
@@ -11,11 +17,14 @@ from django.views.generic.edit import (
 	FormView, UpdateView, DeletionMixin
 )
 
+from django.contrib.sites.shortcuts import get_current_site
+
+from django.template.loader import render_to_string
+
 from django.urls import reverse_lazy
 
 from django.contrib.auth import (
-	login, logout, authenticate,
-	update_session_auth_hash
+	login, logout, authenticate
 )
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
@@ -24,6 +33,8 @@ from .forms import (
 	RegisterForm, LoginUserForm, UserForm,
 	PasswordConfirmForm
 )
+
+from .tokens import account_activation_token
 
 from .mixins import ProfileMixin
 
@@ -45,9 +56,24 @@ class UserCreateView(CreateView):
 	success_url = reverse_lazy("login_user")
 
 	def form_valid(self, form):
-		user = form.save()
-		login(self.request, user)
-		return redirect("profile_user")
+		user = form.save(commit = False)
+		user.is_active = False
+		user.email = form.cleaned_data["email"]
+		user.save()
+
+		current_site = get_current_site(self.request)
+		subject = 'Activate Your MySite Account'
+
+		message = render_to_string('activation_sent_email.html', {
+			'user': user,
+			'domain': current_site.domain,
+			'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+			'token': account_activation_token.make_token(user),
+		})
+
+		user.email_user(subject, message)
+
+		return redirect('activation_sent_email_user')
 
 
 class LoginUser(LoginView):
@@ -166,3 +192,29 @@ class PasswordConfirmView(ProfileMixin, FormView):
 def	logout_user(request):
 	logout(request)
 	return redirect("login_user")
+
+
+def activation_sent(request):
+	return render(request, "activate_sent.html")
+
+
+def activate(request, uidb64, token):
+	try:
+		uid = force_text(urlsafe_base64_decode(uidb64))
+		user = User.objects.get(pk = uid)
+	except (
+		TypeError,
+		ValueError,
+		OverflowError,
+		User.DoesNotExist
+	):
+		user = None
+
+	if user is not None and account_activation_token.check_token(user, token):
+		user.is_active = True
+		user.save()
+		login(request, user)
+
+		return redirect('profile_user')
+	else:
+		return render(request, 'activate_sent_invalid.html')

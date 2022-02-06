@@ -16,6 +16,9 @@ class RegisterForm(UserCreationForm):
 	password2 = forms.CharField(
 		label = "Password confirmation", widget = forms.PasswordInput(attrs = {"class": "form-control"})
 	)
+	email = forms.EmailField(
+		label = "Email", required = True, widget = forms.TextInput(attrs = {"class": "form-control", "type": "email"})
+	)
 
 	class Meta:
 		model = User
@@ -24,6 +27,7 @@ class RegisterForm(UserCreationForm):
 			"username": forms.TextInput(attrs = {"class": "form-control"}),
 			"password1": forms.PasswordInput(attrs = {"class": "form-control"}),
 			"password2": forms.PasswordInput(attrs = {"class": "form-control"}),
+			"email": forms.TextInput(attrs = {"class": "form-control", "type": "email"}),
 		}
 
 
