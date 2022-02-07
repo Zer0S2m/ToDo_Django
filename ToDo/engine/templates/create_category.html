@@ -13,8 +13,12 @@
 				<div class="mb-3">
 					<label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
 					{{ f }}
-					<div class="form-error">
-						{{ f.errors }}
+					<div class="form-error mt-3">
+						{% if f.errors %}
+							<div class="alert alert-danger" role="alert">
+								<p class="mb-0">{{ f.errors }}</p>
+							</div>
+						{% endif %}
 					</div>
 				</div>
 			{% endfor %}

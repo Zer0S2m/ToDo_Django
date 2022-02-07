@@ -1,3 +1,4 @@
+from math import degrees
 from django import template
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -98,19 +99,24 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
 	template_name = "edit.html"
 	success_url = reverse_lazy("profile_user")
 
-	def get(self, request, *args, **kwargs):
-		if not self.request.user.is_authenticated:
-			return render(self.request, "404.html", status = 404)
-		
+	def get_object_user(self):
 		self.kwargs = {
 			"pk": self.request.user.id
 		}
 
-		self.object = self.get_object(
+		object = self.get_object(
 			queryset = self.model.objects.filter(
 				pk = self.kwargs.get("pk")
 			)
 		)
+
+		return object
+
+	def get(self, request, *args, **kwargs):
+		if not self.request.user.is_authenticated:
+			return render(self.request, "404.html", status = 404)
+
+		self.object = self.get_object_user()
 
 		fields_user = self.return_fields_user()
 		context_data = self.get_context_data()
@@ -146,7 +152,7 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
 		}
 
 
-class UserDeleteView(ProfileMixin, TemplateView, DeletionMixin):
+class UserDeleteView(LoginRequiredMixin, ProfileMixin, TemplateView, DeletionMixin):
 	model = User
 	template_name = "delete.html"
 	success_url = reverse_lazy("list_note")

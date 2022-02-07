@@ -47,8 +47,8 @@ class NoteForm(forms.ModelForm):
 
 			if self.completion_date < past_date:
 				raise forms.ValidationError(("Completion date cannot be past!"), code = 'past')
-			else:
-				return completion_date
+
+			return completion_date
 
 
 class CategoryForm(forms.ModelForm):

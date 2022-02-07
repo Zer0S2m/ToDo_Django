@@ -36,7 +36,13 @@
 						Date of completion is not required.
 					</p>
 					<div class="form-error mb-3">
-						{{ form.completion_date.errors }}
+						{% if form.completion_date.errors %}
+							<div class="alert alert-danger" role="alert">
+								{% for error in form.completion_date.errors %}
+									<p class="mb-0">{{ error }}</p>
+								{% endfor %}
+							</div>
+						{% endif %}
 					</div>
 				</div>
 				{% if categories %}
