@@ -1,5 +1,3 @@
-from math import degrees
-from django import template
 from django.shortcuts import redirect
 from django.shortcuts import render
 

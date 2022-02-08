@@ -135,6 +135,15 @@ class NoteDeleteView(LoginRequiredMixin, DeleteView, MixinNote):
 
 		return super().get(request, *args, **kwargs)
 
+	def post(self, request, *args, **kwargs):
+		object = self.get_object()
+
+		if object.files:
+			for file in object.files.all():
+				file.delete()
+
+		return super().post(request, *args, **kwargs)
+
 
 class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 	model = Note

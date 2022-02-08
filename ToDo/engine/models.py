@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models.signals import post_delete
+
+from django.dispatch import receiver
 
 from django.shortcuts import reverse
 
@@ -52,3 +55,8 @@ class File(models.Model):
 
 	def __str__(self):
 		return f"id: {self.id}"
+
+
+@receiver(post_delete, sender = File)
+def mymodel_delete(sender, instance, **kwargs):
+    instance.file.delete(False)
