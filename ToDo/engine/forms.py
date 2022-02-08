@@ -23,14 +23,21 @@ class NoteForm(forms.ModelForm):
 		widget = forms.DateTimeInput(attrs = {"class": "form-control", "type": "date"}),
 		help_text = "Date of completion is not required."
 	)
+	files = forms.FileField(
+		label = "File upload",
+		required = False,
+		widget = forms.ClearableFileInput(attrs = {"multiple": True, "class": "form-control"}),
+		help_text = "File upload is not required. Maximum number of files 3."
+	)
 
 	class Meta:
 		model = Note
-		fields = ("title", "text", "completion_date",)
+		fields = ("title", "text", "completion_date", "files",)
 		widgets = {
 			"title": forms.TextInput(attrs = {"class": "form-control"}),
 			"text": forms.Textarea(attrs = {"class": "form-control"}),
 			"completion_date": forms.DateTimeInput(attrs = {"class": "form-control", "type": "date"}),
+			"files": forms.ClearableFileInput(attrs = {"multiple": True, "class": "form-control"})
 		}
 
 	def set_completion_date(self, date: str):

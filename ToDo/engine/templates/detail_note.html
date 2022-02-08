@@ -26,6 +26,11 @@
 					Date of completion: <span class="fw-bold">{{ note.completion_date|date:"j (l) M. Y" }}</span>
 				</p>
 			{% endif %}
+			{% if note.files.all %}
+				{% for file in note.files.all %}
+					<a href="{{ file.file.url }}" class="link d-flex">{{ file.file.name }}</a>
+				{% endfor %}
+			{% endif %}
 			<div class="d-flex mt-3">
 				<a href="{% url 'delete_note' note.id %}" class="btn btn-danger me-3">Delete</a>
 				<a href="{% url 'edit_note' note.id %}" class="btn btn-primary">Edit</a>

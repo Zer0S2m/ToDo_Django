@@ -1,4 +1,5 @@
 from datetime import datetime
+from distutils.command import upload
 
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -16,8 +17,9 @@ from django.views.generic import (
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import Note
-from .models import Category
+from .models import (
+	Note, Category, File
+)
 
 from .forms import (
 	NoteForm, CategoryForm
@@ -195,6 +197,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 		return form
 
 	def form_valid(self, form):
+		files = []
 		form = self.set_cleaned_data_form(form)
 
 		self.object = form.save(commit = False)
@@ -204,6 +207,21 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 			self.object.category = form.cleaned_data["category"].first()
 
 		self.object.save()
+
+		if len(self.request.FILES.getlist("files")) > 3:
+			form.errors["files"] = "File limit exceeded! Maximum number of files 3!"
+			return render(self.request, "create_note.html", {"form": form})
+
+		for file in self.request.FILES.getlist("files"):
+			new_file = File(
+				file = file,
+				user = form.cleaned_data["user"]
+			)
+			new_file.save()
+			files.append(new_file)
+
+		if files:
+			self.object.files.add(*files)
 
 		return redirect(self.object)
 
@@ -294,17 +312,17 @@ class CategoryUpdateView(LoginRequiredMixin, UpdateView, MixinCategory):
 
 	def form_valid(self, form):
 		slug = create_slug_category(
-            title = form.cleaned_data["title"],
-            id_user = self.request.user.id
+			title = form.cleaned_data["title"],
+			id_user = self.request.user.id
 		)
 
 		if self.kwargs.get(self.slug_url_kwarg) == slug:
 			return HttpResponseRedirect(self.get_success_url())
 
 		if self.model.objects.filter(
-            slug = slug,
+			slug = slug,
 			user = self.request.user
-        ).first():
+		).first():
 			form.errors["title"] = "This category already exists!"
 			return render(self.request, "edit_category.html", {"form": form})
 
