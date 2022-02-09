@@ -1,5 +1,4 @@
 from datetime import datetime
-from distutils.command import upload
 
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -151,6 +150,21 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 	form_class = NoteForm
 
 	def form_valid(self, form):
+		is_files_user = self.check_is_files_user(self.request.POST.getlist("deleted_files"))
+		if is_files_user:
+			self.deletes_files(self.request.POST.getlist("deleted_files"))
+		else:
+			form.errors["files"] = ["Files do not exist!"]
+			return super().form_invalid(form)
+
+		len_received_files = len(self.request.FILES.getlist("files"))
+		len_current_files = len(self.object.files.all())
+
+		if len_received_files + len_current_files > 3:
+			form.errors["files"] = ["File limit exceeded! Maximum number of files 3!"]
+			return super().form_invalid(form)
+
+		files = self.create_files_for_user(self.request.user)
 		category_id = self.request.POST.get("category")
 		object = form.save(commit = False)
 
@@ -158,6 +172,9 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 			object.category = Category.objects.filter(
 				pk = category_id
 			).first()
+
+		if files:
+			object.files.add(*files)
 
 		object.save()
 
@@ -180,6 +197,23 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 			return render(self.request, "404.html", status = 404)
 
 		return super().get(request, *args, **kwargs)
+
+	def deletes_files(self, id_files):
+		for id_file in id_files:
+			deleted_file = File.objects.filter(
+				user = self.request.user,
+				id = int(id_file)
+			).first()
+			deleted_file.delete()
+
+	def check_is_files_user(self, id_files):
+		files_user_id = [file_user.id for file_user in self.object.files.all()]
+		
+		for id_file in id_files:
+			if not int(id_file) in files_user_id:
+				return False
+		
+		return True
 
 
 class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
@@ -206,8 +240,11 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 		return form
 
 	def form_valid(self, form):
-		files = []
 		form = self.set_cleaned_data_form(form)
+
+		if len(self.request.FILES.getlist("files")) > 3:
+			form.errors["files"] = ["File limit exceeded! Maximum number of files 3!"]
+			return super().form_invalid(form)
 
 		self.object = form.save(commit = False)
 
@@ -217,18 +254,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 
 		self.object.save()
 
-		if len(self.request.FILES.getlist("files")) > 3:
-			form.errors["files"] = "File limit exceeded! Maximum number of files 3!"
-			return render(self.request, "create_note.html", {"form": form})
-
-		for file in self.request.FILES.getlist("files"):
-			new_file = File(
-				file = file,
-				user = form.cleaned_data["user"]
-			)
-			new_file.save()
-			files.append(new_file)
-
+		files = self.create_files_for_user(form.cleaned_data["user"])
 		if files:
 			self.object.files.add(*files)
 

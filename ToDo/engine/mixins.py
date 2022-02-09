@@ -1,4 +1,5 @@
 from .models import Category
+from .models import File
 
 
 class MixinNote():
@@ -18,6 +19,16 @@ class MixinNote():
 
 		return True
 
+	def create_files_for_user(self, user):
+		files = []
+
+		for file in self.request.FILES.getlist("files"):
+			new_file = File(file = file, user = user)
+			new_file.save()
+
+			files.append(new_file)
+
+		return files
 
 class MixinCategory():
 	def check_is_category_user(self):

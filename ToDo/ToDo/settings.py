@@ -70,7 +70,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             "builtins": [
-                'engine.templatetags.count_notes'
+                'engine.templatetags.count_notes',
+                'engine.templatetags.file_user',
             ],
         },
     },

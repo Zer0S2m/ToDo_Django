@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load file_user %}
 
 {% block title %}
 	ToDo Django - Note detail
@@ -28,7 +29,7 @@
 			{% endif %}
 			{% if note.files.all %}
 				{% for file in note.files.all %}
-					<a href="{{ file.file.url }}" class="link d-flex">{{ file.file.name }}</a>
+					<a href="{{ file.file.url }}" class="link d-flex">{{ file_user|get_name_file_user:file.file.name }}</a>
 				{% endfor %}
 			{% endif %}
 			<div class="d-flex mt-3">
