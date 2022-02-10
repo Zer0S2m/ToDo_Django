@@ -11,8 +11,9 @@ from django.db.models import Q
 
 from django.views.generic import (
 	ListView, DetailView, DeleteView,
-	UpdateView, CreateView
+	UpdateView, CreateView, View,
 )
+from django.views.generic.edit import DeletionMixin
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -142,6 +143,32 @@ class NoteDeleteView(LoginRequiredMixin, DeleteView, MixinNote):
 				file.delete()
 
 		return super().post(request, *args, **kwargs)
+
+
+class NoteCompleteView(View, DeletionMixin, MixinNote):
+	success_url = reverse_lazy("list_note")
+	model = Note
+	pk_url_kwarg = "pk"
+
+	def get(self, request, *args, **kwargs):
+		if not self.check_is_note_user():
+			return render(request, "404.html", status = 404)
+
+		self.delete_files()
+		return super().delete(request)
+
+	def get_object(self, **kwargs):
+		return self.model.objects.get(
+			user = self.request.user,
+			id = self.kwargs.get(self.pk_url_kwarg)
+		)
+
+	def delete_files(self):
+		object = self.get_object()
+
+		if object.files:
+			for file in object.files.all():
+				file.delete()
 
 
 class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
