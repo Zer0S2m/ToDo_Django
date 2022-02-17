@@ -30,6 +30,7 @@ class MixinNote():
 
 		return files
 
+
 class MixinCategory():
 	def check_is_category_user(self):
 		if not self.model.objects.filter(

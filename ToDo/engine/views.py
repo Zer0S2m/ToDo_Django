@@ -175,30 +175,32 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 	model = Note
 	template_name = "edit_note.html"
 	form_class = NoteForm
-
+	
 	def form_valid(self, form):
-		is_files_user = self.check_is_files_user(self.request.POST.getlist("deleted_files"))
-		if is_files_user:
-			self.deletes_files(self.request.POST.getlist("deleted_files"))
-		else:
+		deleted_files = self.request.POST.getlist("deleted_files")
+		is_files_user = self.check_is_files_user(deleted_files)
+		if not is_files_user:
 			form.errors["files"] = ["Files do not exist!"]
 			return super().form_invalid(form)
 
 		len_received_files = len(self.request.FILES.getlist("files"))
 		len_current_files = len(self.object.files.all())
 
-		if len_received_files + len_current_files > 3:
+		if len_received_files + len_current_files - len(deleted_files) > 3:
 			form.errors["files"] = ["File limit exceeded! Maximum number of files 3!"]
 			return super().form_invalid(form)
+
+		self.deletes_files(deleted_files)
 
 		files = self.create_files_for_user(self.request.user)
 		category_id = self.request.POST.get("category")
 		object = form.save(commit = False)
 
 		if category_id:
-			object.category = Category.objects.filter(
-				pk = category_id
-			).first()
+			object.category = Category.objects.get(
+				pk = category_id,
+				user = self.request.user
+			)
 
 		if files:
 			object.files.add(*files)
@@ -258,8 +260,8 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 		form.cleaned_data["user"] = self.request.user
 		category_id = self.request.POST.get("category")
 
-		if category_id:
-			form.cleaned_data["category"] = Category.objects.filter(
+		if int(category_id):
+			form.cleaned_data["category"] = Category.objects.get(
 				pk = int(category_id),
 				user = self.request.user
 			)
@@ -277,7 +279,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView, MixinNote):
 
 		self.object.user = form.cleaned_data["user"]
 		if "category" in form.cleaned_data:
-			self.object.category = form.cleaned_data["category"].first()
+			self.object.category = form.cleaned_data["category"]
 
 		self.object.save()
 
