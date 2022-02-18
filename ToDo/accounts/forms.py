@@ -1,12 +1,19 @@
 from django import forms
 
+from django.contrib.auth import password_validation
 from django.contrib.auth.forms import (
 	UserCreationForm, AuthenticationForm
 )
 from django.contrib.auth.models import User
 
+from django.core.exceptions import ValidationError
 
-class RegisterForm(UserCreationForm):
+from django.utils.translation import gettext_lazy as _
+
+from .mixins import FormUserMixin
+
+
+class RegisterForm(UserCreationForm, FormUserMixin):
 	username = forms.CharField(
 		label = "Login", widget = forms.TextInput(attrs = {"class": "form-control"})
 	)
@@ -43,7 +50,7 @@ class LoginUserForm(AuthenticationForm):
 	)
 
 
-class UserForm(forms.ModelForm):
+class UserForm(forms.ModelForm, FormUserMixin):
 	username = forms.CharField(
 		label = "Login", widget = forms.TextInput(attrs = {"class": "form-control"})
 	)
@@ -74,14 +81,18 @@ class PasswordConfirmForm(forms.ModelForm):
 
 class ChangePassword(forms.ModelForm):
 	error_messages = {
-		'password_mismatch': ("Password mismatch."),
+		'password_mismatch': ("Password mismatch!"),
 	}
 
 	password1 = forms.CharField(
-		label = "Password", widget = forms.PasswordInput(attrs = {"class": "form-control"})
+		label = "Password",
+		widget = forms.PasswordInput(attrs = {"class": "form-control"}),
+		strip = False,
 	)
 	password2 = forms.CharField(
-		label = "Password confirmation", widget = forms.PasswordInput(attrs = {"class": "form-control"})
+		label = "Password confirmation",
+		widget = forms.PasswordInput(attrs = {"class": "form-control"}),
+		strip = False,
 	)
 
 	class Meta:
@@ -103,3 +114,13 @@ class ChangePassword(forms.ModelForm):
 			)
 
 		return password2
+
+	def _post_clean(self):
+		super()._post_clean()
+		password = self.cleaned_data.get('password2')
+
+		if password:
+			try:
+				password_validation.validate_password(password, self.instance)
+			except ValidationError as error:
+				self.add_error('password2', error)

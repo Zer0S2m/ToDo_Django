@@ -30,6 +30,13 @@ class MixinNote():
 
 		return files
 
+	def delete_files(self):
+		object = self.get_object()
+
+		if object.files:
+			for file in object.files.all():
+				file.delete()
+
 
 class MixinCategory():
 	def check_is_category_user(self):

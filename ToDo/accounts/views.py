@@ -1,5 +1,6 @@
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import (
+	redirect, render, HttpResponseRedirect
+)
 
 from django.utils.encoding import force_text
 from django.utils.encoding import force_bytes
@@ -126,14 +127,12 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
 		return self.render_to_response(context_data)
 
 	def post(self, request, *args, **kwargs):
-		self.kwargs = {
-			"pk": self.request.user.id
-		}
+		self.kwargs["pk"] = self.request.user.id
 		return super().post(request, *args, **kwargs)
 
 	def form_valid(self, form):
 		self.save(form)
-		return super().form_valid(form)
+		return HttpResponseRedirect(self.get_success_url())
 
 	def save(self, form):
 		for key, value in form.cleaned_data.items():

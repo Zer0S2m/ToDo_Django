@@ -136,12 +136,7 @@ class NoteDeleteView(LoginRequiredMixin, DeleteView, MixinNote):
 		return super().get(request, *args, **kwargs)
 
 	def post(self, request, *args, **kwargs):
-		object = self.get_object()
-
-		if object.files:
-			for file in object.files.all():
-				file.delete()
-
+		self.delete_files()
 		return super().post(request, *args, **kwargs)
 
 
@@ -162,13 +157,6 @@ class NoteCompleteView(View, DeletionMixin, MixinNote):
 			user = self.request.user,
 			id = self.kwargs.get(self.pk_url_kwarg)
 		)
-
-	def delete_files(self):
-		object = self.get_object()
-
-		if object.files:
-			for file in object.files.all():
-				file.delete()
 
 
 class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
@@ -196,7 +184,7 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView, MixinNote):
 		category_id = self.request.POST.get("category")
 		object = form.save(commit = False)
 
-		if category_id:
+		if int(category_id):
 			object.category = Category.objects.get(
 				pk = category_id,
 				user = self.request.user
