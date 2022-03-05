@@ -33,7 +33,9 @@
 				{% endfor %}
 			{% endif %}
 			<div class="d-flex mt-3">
-				<a href="{% url 'complete_name' note.id %}" class="btn btn-success me-2">Complete</a>
+				<form action="{% url 'complete_name' note.id %}" class="d-flex">
+					<button type="submit" class="btn btn-success me-2">Complete</button>
+				</form>
 				<a href="{% url 'delete_note' note.id %}" class="btn btn-danger me-3">Delete</a>
 				<a href="{% url 'edit_note' note.id %}" class="btn btn-primary">Edit</a>
 			</div>
